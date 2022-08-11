@@ -67,12 +67,6 @@ static void SortTests()
 	std::sort(g_testEntries, g_testEntries + g_testCount, CompareTests);
 }
 
-static void RestartTest()
-{
-	delete s_test;
-	s_test = g_testEntries[s_settings.m_testIndex].createFcn();
-}
-
 static void CreateUI(GLFWwindow* window, const char* glslVersion = NULL)
 {
 	IMGUI_CHECKVERSION();
@@ -195,7 +189,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 			break;
 
 		case GLFW_KEY_HOME:
-			g_camera.ResetView();
+			// Reset view
+			g_camera.m_zoom = 1.0f;
+			g_camera.m_center.Set(0.0f, 20.0f);
 			break;
 
 		case GLFW_KEY_Z:
@@ -209,7 +205,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 			break;
 
 		case GLFW_KEY_R:
-			RestartTest();
+			// Reset test
+			delete s_test;
+			s_test = g_testEntries[s_settings.m_testIndex].createFcn();
 			break;
 
 		case GLFW_KEY_SPACE:
@@ -348,6 +346,12 @@ static void ScrollCallback(GLFWwindow* window, double dx, double dy)
 	}
 }
 
+static void RestartTest()
+{
+	delete s_test;
+	s_test = g_testEntries[s_settings.m_testIndex].createFcn();
+}
+
 static void UpdateUI()
 {
 	int menuWidth = 180;
@@ -438,6 +442,9 @@ static void UpdateUI()
 							ImGui::TreeNodeEx((void*)(intptr_t)i, leafNodeFlags | selectionFlags, "%s", g_testEntries[i].name);
 							if (ImGui::IsItemClicked())
 							{
+								delete s_test;
+								s_settings.m_testIndex = i;
+								s_test = g_testEntries[i].createFcn();
 								s_testSelection = i;
 							}
 							++i;
@@ -606,7 +613,8 @@ int main(int, char**)
 			s_settings.m_testIndex = s_testSelection;
 			delete s_test;
 			s_test = g_testEntries[s_settings.m_testIndex].createFcn();
-			g_camera.ResetView();
+			g_camera.m_zoom = 1.0f;
+			g_camera.m_center.Set(0.0f, 20.0f);
 		}
 
 		glfwPollEvents();
